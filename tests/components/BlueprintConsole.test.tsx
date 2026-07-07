@@ -13,8 +13,14 @@ vi.mock('../../src/data/blueprint', () => {
         category: "Vision & Problem",
         tags: ["vision", "problem"],
         content: `
+### Heading 3 Test
 This is standard text.
-**This is bold text with \`code block\` inline**.
+* Bullet item 1
+  - Nested item 1
+\`\`\`
+code block marker
+\`\`\`
+This is **bold** text with \`code block\` inline.
 | Column 1 | Column 2 |
 | :--- | :--- |
 | Cell 1 | Cell 2 |
@@ -77,6 +83,13 @@ describe('BlueprintConsole Component', () => {
 
   it('renders formatted tables and code blocks correctly', () => {
     render(<BlueprintConsole />);
+    // Verify subheaders
+    expect(screen.getByText('Heading 3 Test')).toBeInTheDocument();
+
+    // Verify bullet lists and nested lists
+    expect(screen.getByText('Bullet item 1')).toBeInTheDocument();
+    expect(screen.getByText('Nested item 1')).toBeInTheDocument();
+
     // Verify standard text is present
     expect(screen.getByText('This is standard text.')).toBeInTheDocument();
     
@@ -87,6 +100,10 @@ describe('BlueprintConsole Component', () => {
     // Verify inline code block is rendered as code element (proving backtick code parsing is covered)
     const codeElement = screen.getByText('code block');
     expect(codeElement.tagName.toLowerCase()).toBe('code');
+
+    // Verify bold inline element is rendered as strong element
+    const boldElement = screen.getByText('bold');
+    expect(boldElement.tagName.toLowerCase()).toBe('strong');
   });
 
   it('handles copying to clipboard correctly', async () => {

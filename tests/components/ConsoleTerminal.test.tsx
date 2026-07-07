@@ -1,9 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ConsoleTerminal } from '../../src/components/ConsoleTerminal';
 import React from 'react';
 
 describe('ConsoleTerminal Component', () => {
+  beforeEach(() => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+  });
+
   it('renders correctly when in standby with no steps', () => {
     render(
       <ConsoleTerminal

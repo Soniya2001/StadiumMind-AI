@@ -83,6 +83,11 @@ describe('MapVisualization Component', () => {
     const plazaF = screen.getByText('F');
     fireEvent.click(plazaF);
     expect(mockOnSelectZone).toHaveBeenCalledWith('Concession_Plaza_C');
+
+    // Click on First Aid Post 2
+    const firstAid2 = screen.getByLabelText('First Aid Post 2');
+    fireEvent.click(firstAid2);
+    expect(mockOnSelectZone).toHaveBeenCalledWith('First_Aid_Post_2');
   });
 
   it('renders the detailed popup when a zone is selected', () => {
@@ -168,6 +173,15 @@ describe('MapVisualization Component', () => {
     rerender(
       <MapVisualization
         activeScenarioId={null}
+        selectedZone="Sector_A"
+        onSelectZone={vi.fn()}
+      />
+    );
+    expect(screen.getByText('Sector A Grandstands')).toBeInTheDocument();
+
+    rerender(
+      <MapVisualization
+        activeScenarioId={null}
         selectedZone="unknown_zone"
         onSelectZone={vi.fn()}
       />
@@ -200,6 +214,54 @@ describe('MapVisualization Component', () => {
     mockOnSelectZone.mockClear();
     fireEvent.keyDown(sectorAElement!, { key: 'Escape', code: 'Escape' });
     expect(mockOnSelectZone).not.toHaveBeenCalled();
+
+    // Additional keydown targets for full branch coverage
+    const gate1Element = screen.getByText('G1').closest('g');
+    fireEvent.keyDown(gate1Element!, { key: 'Enter', code: 'Enter' });
+    expect(mockOnSelectZone).toHaveBeenCalledWith('Gate_1');
+
+    const gate2Element = screen.getByText('G2').closest('g');
+    fireEvent.keyDown(gate2Element!, { key: 'Enter', code: 'Enter' });
+    expect(mockOnSelectZone).toHaveBeenCalledWith('Gate_2');
+
+    const gate3Element = screen.getByText('G3').closest('g');
+    fireEvent.keyDown(gate3Element!, { key: 'Enter', code: 'Enter' });
+    expect(mockOnSelectZone).toHaveBeenCalledWith('Gate_3');
+
+    const gate4Element = screen.getByText('G4').closest('g');
+    fireEvent.keyDown(gate4Element!, { key: 'Enter', code: 'Enter' });
+    expect(mockOnSelectZone).toHaveBeenCalledWith('Gate_4');
+
+    const gate5Element = screen.getByText('G5').closest('g');
+    expect(gate5Element).toBeInTheDocument();
+    fireEvent.keyDown(gate5Element!, { key: 'Enter', code: 'Enter' });
+    expect(mockOnSelectZone).toHaveBeenCalledWith('Gate_5');
+
+    const plazaFElement = screen.getByText('F').closest('g');
+    expect(plazaFElement).toBeInTheDocument();
+    fireEvent.keyDown(plazaFElement!, { key: ' ', code: 'Space' });
+    expect(mockOnSelectZone).toHaveBeenCalledWith('Concession_Plaza_C');
+
+    const firstAid2Element = screen.getByLabelText('First Aid Post 2');
+    expect(firstAid2Element).toBeInTheDocument();
+    fireEvent.keyDown(firstAid2Element, { key: 'Enter', code: 'Enter' });
+    expect(mockOnSelectZone).toHaveBeenCalledWith('First_Aid_Post_2');
+
+    const transitElement = screen.getByText('TRANSPORTATION SHUTTLE LOOP & METRO BUS BAY').closest('g');
+    fireEvent.keyDown(transitElement!, { key: 'Enter', code: 'Enter' });
+    expect(mockOnSelectZone).toHaveBeenCalledWith('transit_loop');
+
+    const sectorBElement = screen.getByText('Sector B').closest('g');
+    fireEvent.keyDown(sectorBElement!, { key: 'Enter', code: 'Enter' });
+    expect(mockOnSelectZone).toHaveBeenCalledWith('Sector_B');
+
+    const sectorCElement = screen.getByText('Sector C').closest('g');
+    fireEvent.keyDown(sectorCElement!, { key: 'Enter', code: 'Enter' });
+    expect(mockOnSelectZone).toHaveBeenCalledWith('Sector_C');
+
+    const sectorDElement = screen.getByText('Sector D').closest('g');
+    fireEvent.keyDown(sectorDElement!, { key: 'Enter', code: 'Enter' });
+    expect(mockOnSelectZone).toHaveBeenCalledWith('Sector_D');
   });
 
   it('changes styles dynamically based on activeScenarioId', () => {
