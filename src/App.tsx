@@ -25,6 +25,7 @@ import {
 import { MapVisualization } from "./components/MapVisualization";
 import { ConsoleTerminal } from "./components/ConsoleTerminal";
 import { BlueprintConsole } from "./components/BlueprintConsole";
+import { getMockTranslation } from "./utils/translator";
 
 // Define TypeScript structures for our agent simulation
 interface SimulationStep {
@@ -86,32 +87,11 @@ export default function App() {
   // Multilingual Translator States
   const [translatorInput, setTranslatorInput] = useState("Where is the nearest first aid station?");
   const [translatorLang, setTranslatorLang] = useState("es");
-  const [translatorOutput, setTranslatorOutput] = useState("¿Dónde está la estación de primeros auxilios más cercana?");
+  const [translatorOutput, setTranslatorOutput] = useState("¿Dónde está la estación de primeiros auxilios más cercana?");
 
-  const getMockTranslation = (text: string, lang: string) => {
-    const t = text.toLowerCase();
-    if (lang === "es") {
-      if (t.includes("first aid")) return "¿Dónde está la estación de primeros auxilios más cercana?";
-      if (t.includes("exit")) return "¿Cómo llego a la salida más rápida?";
-      if (t.includes("lost")) return "He perdido mi boleto, ¿me puede ayudar?";
-      return `[Traducido al Español]: "${text}"`;
-    }
-    if (lang === "fr") {
-      if (t.includes("first aid")) return "Où se trouve le poste de secours le plus proche?";
-      if (t.includes("exit")) return "Comment accéder à la sortie la plus proche?";
-      if (t.includes("lost")) return "J'ai perdu mon billet, pouvez-vous m'aider?";
-      return `[Traduit en Français]: "${text}"`;
-    }
-    if (lang === "jp") {
-      if (t.includes("first aid")) return "救護所はどこですか？ (Kyūgosho wa doko desu ka?)";
-      if (t.includes("exit")) return "一番近い出口はどこですか？ (Ichiban chikai deguchi wa doko desu ka?)";
-      if (t.includes("lost")) return "チケットをなくしました。助けてもらえますか？";
-      return `[日本語訳]: "${text}"`;
-    }
-    return `[Translated]: "${text}"`;
-  };
+  // Playback timer ref�";
 
-  // Playback timer ref
+
   const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Stop simulation on tab shift or unmount
@@ -341,10 +321,14 @@ export default function App() {
 
       {/* Main Tabs Selection */}
       <div className="border-b border-slate-900/60 bg-slate-950 px-6 py-2 flex items-center justify-between shrink-0">
-        <div className="flex space-x-1.5">
+        <div className="flex space-x-1.5" role="tablist" aria-label="Main Navigation Tabs">
           <button
+            id="tab-operations"
+            role="tab"
+            aria-selected={activeTab === "operations"}
+            aria-controls="tabpanel-operations"
             onClick={() => setActiveTab("operations")}
-            className={`px-4 py-2 rounded-lg text-xs font-mono transition-all uppercase tracking-wider flex items-center space-x-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-mono transition-all uppercase tracking-wider flex items-center space-x-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 ${
               activeTab === "operations"
                 ? "bg-slate-900 border border-slate-800 text-slate-100"
                 : "text-slate-400 hover:text-slate-200"
@@ -355,8 +339,12 @@ export default function App() {
           </button>
 
           <button
+            id="tab-blueprint"
+            role="tab"
+            aria-selected={activeTab === "blueprint"}
+            aria-controls="tabpanel-blueprint"
             onClick={() => setActiveTab("blueprint")}
-            className={`px-4 py-2 rounded-lg text-xs font-mono transition-all uppercase tracking-wider flex items-center space-x-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-mono transition-all uppercase tracking-wider flex items-center space-x-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 ${
               activeTab === "blueprint"
                 ? "bg-slate-900 border border-slate-800 text-slate-100"
                 : "text-slate-400 hover:text-slate-200"
@@ -367,8 +355,12 @@ export default function App() {
           </button>
 
           <button
+            id="tab-agents"
+            role="tab"
+            aria-selected={activeTab === "agents"}
+            aria-controls="tabpanel-agents"
             onClick={() => setActiveTab("agents")}
-            className={`px-4 py-2 rounded-lg text-xs font-mono transition-all uppercase tracking-wider flex items-center space-x-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-mono transition-all uppercase tracking-wider flex items-center space-x-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 ${
               activeTab === "agents"
                 ? "bg-slate-900 border border-slate-800 text-slate-100"
                 : "text-slate-400 hover:text-slate-200"
@@ -379,8 +371,12 @@ export default function App() {
           </button>
 
           <button
+            id="tab-onboarding"
+            role="tab"
+            aria-selected={activeTab === "onboarding"}
+            aria-controls="tabpanel-onboarding"
             onClick={() => setActiveTab("onboarding")}
-            className={`px-4 py-2 rounded-lg text-xs font-mono transition-all uppercase tracking-wider flex items-center space-x-2 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-mono transition-all uppercase tracking-wider flex items-center space-x-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 ${
               activeTab === "onboarding"
                 ? "bg-slate-900 border border-slate-800 text-slate-100"
                 : "text-slate-400 hover:text-slate-200"
@@ -407,7 +403,7 @@ export default function App() {
       {/* Main Grid Viewport */}
       <main className="flex-1 overflow-y-auto p-6 bg-slate-950/20">
         {activeTab === "operations" && (
-          <div className="max-w-7xl mx-auto flex flex-col space-y-6 w-full">
+          <div id="tabpanel-operations" role="tabpanel" aria-labelledby="tab-operations" className="max-w-7xl mx-auto flex flex-col space-y-6 w-full">
             
             {/* Multi-Agent Role Selector Dashboard Banner */}
             <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col space-y-3.5">
@@ -1198,13 +1194,13 @@ export default function App() {
         )}
 
         {activeTab === "blueprint" && (
-          <div className="max-w-7xl mx-auto">
+          <div id="tabpanel-blueprint" role="tabpanel" aria-labelledby="tab-blueprint" className="max-w-7xl mx-auto">
             <BlueprintConsole />
           </div>
         )}
 
         {activeTab === "agents" && (
-          <div className="max-w-7xl mx-auto space-y-6">
+          <div id="tabpanel-agents" role="tabpanel" aria-labelledby="tab-agents" className="max-w-7xl mx-auto space-y-6">
             <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 mb-6">
               <div className="flex items-center space-x-2 mb-2">
                 <Cpu className="h-5 w-5 text-indigo-400 animate-pulse" />
@@ -1269,7 +1265,7 @@ export default function App() {
         )}
 
         {activeTab === "onboarding" && (
-          <div className="max-w-4xl mx-auto bg-slate-900/60 border border-slate-800 rounded-xl p-6 space-y-6">
+          <div id="tabpanel-onboarding" role="tabpanel" aria-labelledby="tab-onboarding" className="max-w-4xl mx-auto bg-slate-900/60 border border-slate-800 rounded-xl p-6 space-y-6">
             <div className="flex items-center space-x-2 pb-4 border-b border-slate-800">
               <Settings className="h-5 w-5 text-violet-400 animate-spin-slow" />
               <div>

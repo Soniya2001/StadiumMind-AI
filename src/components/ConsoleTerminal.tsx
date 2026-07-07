@@ -209,8 +209,12 @@ export const ConsoleTerminal: React.FC<ConsoleTerminalProps> = ({
                 {/* Expansion Trigger */}
                 <div className="mt-2.5 pt-2 border-t border-slate-800/50 flex justify-between items-center">
                   <button
+                    id={`expand-step-${idx}`}
                     onClick={() => setExpandedIndex(isOpen ? null : idx)}
-                    className="text-[10px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center space-x-1 cursor-pointer"
+                    aria-expanded={isOpen}
+                    aria-controls={`step-details-${idx}`}
+                    aria-label={isOpen ? `Collapse reasoning details for step ${idx + 1}` : `Expand cognitive state reasoning details for step ${idx + 1}`}
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center space-x-1 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded px-1"
                   >
                     <span>{isOpen ? "[-] COLLAPSE REASONING" : "[+] EXPAND COGNITIVE STATE"}</span>
                   </button>
@@ -230,7 +234,12 @@ export const ConsoleTerminal: React.FC<ConsoleTerminalProps> = ({
 
                 {/* Expanded Cognition Panel */}
                 {isOpen && (
-                  <div className="mt-3 bg-slate-950 p-2.5 rounded border border-slate-800/80 animate-fadeIn text-[11px] leading-relaxed space-y-2">
+                  <div
+                    id={`step-details-${idx}`}
+                    role="region"
+                    aria-labelledby={`expand-step-${idx}`}
+                    className="mt-3 bg-slate-950 p-2.5 rounded border border-slate-800/80 animate-fadeIn text-[11px] leading-relaxed space-y-2"
+                  >
                     <div>
                       <span className="text-slate-500 block uppercase text-[9px] font-bold mb-1 tracking-wider">Inner Cognitive Process & Context:</span>
                       <p className="text-slate-300 font-sans">{step.details}</p>

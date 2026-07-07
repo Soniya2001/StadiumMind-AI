@@ -140,9 +140,13 @@ export const MapVisualization: React.FC<MapVisualizationProps> = ({
       <div className="flex-1 flex items-center justify-center py-4 relative">
         <svg
           viewBox="0 0 800 600"
-          className="w-full max-h-[300px] text-slate-300 transition-all duration-300"
+          className="w-full max-h-[300px] text-slate-300 transition-all duration-300 focus:outline-none"
           style={{ filter: "drop-shadow(0 0 15px rgba(15, 23, 42, 0.4))" }}
+          aria-label="Interactive spatial map of the stadium"
+          role="img"
         >
+          <title>Stadium Spatial Layout Map</title>
+          <desc>Interactive vector layout illustrating gates, grandstand sectors, transportation hub, and first aid posts</desc>
           {/* Defs for gradients */}
           <defs>
             <radialGradient id="stadiumGlow" cx="50%" cy="50%" r="50%">
@@ -159,8 +163,12 @@ export const MapVisualization: React.FC<MapVisualizationProps> = ({
           {/* Outer Transit Hub and Parking Loops */}
           {/* North Parking Loop & Bus Drop */}
           <g
-            className="cursor-pointer group"
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
             id="map-element-transit"
+            tabIndex={0}
+            role="button"
+            aria-label="Transportation shuttle loop & metro bus bay"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("transit_loop"); } }}
             onClick={() => onSelectZone("transit_loop")}
           >
             <path
@@ -186,7 +194,15 @@ export const MapVisualization: React.FC<MapVisualizationProps> = ({
 
           {/* GRANDSTANDS SECTORS */}
           {/* Sector A (West) */}
-          <g className="cursor-pointer group" id="map-element-zoneA" onClick={() => onSelectZone("Sector_A")}>
+          <g
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
+            id="map-element-zoneA"
+            tabIndex={0}
+            role="button"
+            aria-label="Sector A Grandstands"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("Sector_A"); } }}
+            onClick={() => onSelectZone("Sector_A")}
+          >
             <path
               d="M 230,360 A 170,170 0 0,1 400,190 L 400,240 A 120,120 0 0,0 280,360 Z"
               className={`transition-colors duration-300 stroke-2 ${selectedZone === "Sector_A" ? "fill-cyan-900/60 stroke-cyan-400 font-bold" : "fill-slate-800/80 stroke-slate-700 hover:fill-slate-700"}`}
@@ -195,7 +211,15 @@ export const MapVisualization: React.FC<MapVisualizationProps> = ({
           </g>
 
           {/* Sector B (North East) */}
-          <g className="cursor-pointer group" id="map-element-zoneB" onClick={() => onSelectZone("Sector_B")}>
+          <g
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
+            id="map-element-zoneB"
+            tabIndex={0}
+            role="button"
+            aria-label="Sector B Grandstands"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("Sector_B"); } }}
+            onClick={() => onSelectZone("Sector_B")}
+          >
             <path
               d="M 400,190 A 170,170 0 0,1 570,360 L 520,360 A 120,120 0 0,0 400,240 Z"
               className={`transition-colors duration-300 stroke-2 ${selectedZone === "Sector_B" ? "fill-cyan-900/60 stroke-cyan-400 font-bold" : getZoneBStatus()}`}
@@ -204,7 +228,15 @@ export const MapVisualization: React.FC<MapVisualizationProps> = ({
           </g>
 
           {/* Sector C (South East & Concessions/Plaza C) */}
-          <g className="cursor-pointer group" id="map-element-zoneC" onClick={() => onSelectZone("Sector_C")}>
+          <g
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
+            id="map-element-zoneC"
+            tabIndex={0}
+            role="button"
+            aria-label="Sector C Grandstands and Concession Plaza C"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("Sector_C"); } }}
+            onClick={() => onSelectZone("Sector_C")}
+          >
             <path
               d="M 570,360 A 170,170 0 0,1 400,530 L 400,480 A 120,120 0 0,0 520,360 Z"
               className={`transition-colors duration-300 stroke-2 ${selectedZone === "Sector_C" ? "fill-cyan-900/60 stroke-cyan-400 font-bold" : getPlazaCStatus()}`}
@@ -213,7 +245,15 @@ export const MapVisualization: React.FC<MapVisualizationProps> = ({
           </g>
 
           {/* Sector D (South West) */}
-          <g className="cursor-pointer group" id="map-element-zoneD" onClick={() => onSelectZone("Sector_D")}>
+          <g
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
+            id="map-element-zoneD"
+            tabIndex={0}
+            role="button"
+            aria-label="Sector D Grandstands"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("Sector_D"); } }}
+            onClick={() => onSelectZone("Sector_D")}
+          >
             <path
               d="M 400,530 A 170,170 0 0,1 230,360 L 280,360 A 120,120 0 0,0 400,480 Z"
               className={`transition-colors duration-300 stroke-2 ${selectedZone === "Sector_D" ? "fill-cyan-900/60 stroke-cyan-400 font-bold" : "fill-slate-800/80 stroke-slate-700 hover:fill-slate-700"}`}
@@ -223,45 +263,99 @@ export const MapVisualization: React.FC<MapVisualizationProps> = ({
 
           {/* ACCESS GATES (Numbered Circles outside the bowl) */}
           {/* Gate 1 (West) */}
-          <g className="cursor-pointer group" id="map-element-gate1" onClick={() => onSelectZone("Gate_1")}>
+          <g
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
+            id="map-element-gate1"
+            tabIndex={0}
+            role="button"
+            aria-label="Gate 1 Entrance"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("Gate_1"); } }}
+            onClick={() => onSelectZone("Gate_1")}
+          >
             <circle cx="190" cy="360" r="16" className={`transition-all duration-300 stroke-2 ${selectedZone === "Gate_1" ? "fill-cyan-900/80 stroke-cyan-400" : "fill-slate-800 stroke-slate-600 hover:fill-slate-700"}`} />
             <text x="190" y="364" className="fill-slate-200 text-[10px] font-mono font-bold" textAnchor="middle">G1</text>
           </g>
 
           {/* Gate 2 (North West) */}
-          <g className="cursor-pointer group" id="map-element-gate2" onClick={() => onSelectZone("Gate_2")}>
+          <g
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
+            id="map-element-gate2"
+            tabIndex={0}
+            role="button"
+            aria-label="Gate 2 Entrance"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("Gate_2"); } }}
+            onClick={() => onSelectZone("Gate_2")}
+          >
             <circle cx="240" cy="210" r="16" className={`transition-all duration-300 stroke-2 ${selectedZone === "Gate_2" ? "fill-cyan-900/80 stroke-cyan-400" : "fill-slate-800 stroke-slate-600 hover:fill-slate-700"}`} />
             <text x="240" y="214" className="fill-slate-200 text-[10px] font-mono font-bold" textAnchor="middle">G2</text>
           </g>
 
           {/* Gate 3 (North East) */}
-          <g className="cursor-pointer group" id="map-element-gate3" onClick={() => onSelectZone("Gate_3")}>
+          <g
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
+            id="map-element-gate3"
+            tabIndex={0}
+            role="button"
+            aria-label="Gate 3 Entrance"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("Gate_3"); } }}
+            onClick={() => onSelectZone("Gate_3")}
+          >
             <circle cx="560" cy="210" r="16" className={`transition-all duration-300 stroke-2 ${selectedZone === "Gate_3" ? "fill-cyan-900/80 stroke-cyan-400" : "fill-slate-800 stroke-slate-600 hover:fill-slate-700"}`} />
             <text x="560" y="214" className="fill-slate-200 text-[10px] font-mono font-bold" textAnchor="middle">G3</text>
           </g>
 
           {/* Gate 4 (North Central Entrance) */}
-          <g className="cursor-pointer group" id="map-element-gate4" onClick={() => onSelectZone("Gate_4")}>
+          <g
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
+            id="map-element-gate4"
+            tabIndex={0}
+            role="button"
+            aria-label="Gate 4 North Entrance"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("Gate_4"); } }}
+            onClick={() => onSelectZone("Gate_4")}
+          >
             <circle cx="400" cy="165" r="20" className={`transition-all duration-300 stroke-2 ${selectedZone === "Gate_4" ? "ring-2 ring-cyan-400" : ""} ${getGate4Status()}`} />
             <text x="400" y="169" className="fill-slate-950 text-[11px] font-mono font-bold" textAnchor="middle">G4</text>
             <path d="M 400,135 L 400,145" stroke="#334155" strokeWidth="2" />
           </g>
 
           {/* Gate 5 (East Entrance) */}
-          <g className="cursor-pointer group" id="map-element-gate5" onClick={() => onSelectZone("Gate_5")}>
+          <g
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
+            id="map-element-gate5"
+            tabIndex={0}
+            role="button"
+            aria-label="Gate 5 East Entrance"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("Gate_5"); } }}
+            onClick={() => onSelectZone("Gate_5")}
+          >
             <circle cx="610" cy="360" r="16" className={`transition-all duration-300 stroke-2 ${selectedZone === "Gate_5" ? "fill-cyan-900/80 stroke-cyan-400" : "fill-slate-800 stroke-slate-600 hover:fill-slate-700"}`} />
             <text x="610" y="364" className="fill-slate-200 text-[10px] font-mono font-bold" textAnchor="middle">G5</text>
           </g>
 
           {/* Support Elements: First Aid Post & Concessions */}
           {/* First Aid 2 */}
-          <g className="cursor-pointer" onClick={() => onSelectZone("First_Aid_Post_2")}>
+          <g
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
+            tabIndex={0}
+            role="button"
+            aria-label="First Aid Post 2"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("First_Aid_Post_2"); } }}
+            onClick={() => onSelectZone("First_Aid_Post_2")}
+          >
             <rect x="530" y="280" width="22" height="22" rx="3" fill="#ef4444" stroke="#fca5a5" strokeWidth="1" className={selectedZone === "First_Aid_Post_2" ? "stroke-cyan-400 stroke-2" : ""} />
             <path d="M 541,286 L 541,296 M 536,291 L 546,291" stroke="#ffffff" strokeWidth="2" />
           </g>
 
           {/* Concessions / Food Zone C */}
-          <g className="cursor-pointer" onClick={() => onSelectZone("Concession_Plaza_C")}>
+          <g
+            className="cursor-pointer group focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded"
+            tabIndex={0}
+            role="button"
+            aria-label="Concession and Food Plaza C"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectZone("Concession_Plaza_C"); } }}
+            onClick={() => onSelectZone("Concession_Plaza_C")}
+          >
             <rect x="520" y="400" width="22" height="22" rx="3" fill="#f59e0b" stroke="#fcd34d" strokeWidth="1" className={selectedZone === "Concession_Plaza_C" ? "stroke-cyan-400 stroke-2" : ""} />
             <text x="531" y="415" className="fill-slate-950 text-[10px] font-bold font-mono" textAnchor="middle">F</text>
           </g>
@@ -280,7 +374,8 @@ export const MapVisualization: React.FC<MapVisualizationProps> = ({
               </span>
               <button 
                 onClick={(e) => { e.stopPropagation(); onSelectZone(""); }}
-                className="text-slate-500 hover:text-slate-200 font-mono text-[11px] cursor-pointer"
+                aria-label="Close details popup"
+                className="text-slate-500 hover:text-slate-200 font-mono text-[11px] cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded px-1"
               >
                 [X]
               </button>
