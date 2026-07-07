@@ -18,7 +18,7 @@ interface ConsoleTerminalProps {
   activeStepIndex: number;
 }
 
-export const ConsoleTerminal: React.FC<ConsoleTerminalProps> = ({
+export const ConsoleTerminal: React.FC<ConsoleTerminalProps> = React.memo(({
   steps,
   isSimulating,
   activeStepIndex,
@@ -277,4 +277,4 @@ export const ConsoleTerminal: React.FC<ConsoleTerminalProps> = ({
       </div>
     </div>
   );
-};
+});

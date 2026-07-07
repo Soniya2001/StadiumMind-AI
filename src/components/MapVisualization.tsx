@@ -6,7 +6,7 @@ interface MapVisualizationProps {
   onSelectZone: (zoneId: string) => void;
 }
 
-export const MapVisualization: React.FC<MapVisualizationProps> = ({
+export const MapVisualization: React.FC<MapVisualizationProps> = React.memo(({
   activeScenarioId,
   selectedZone,
   onSelectZone,
@@ -430,4 +430,4 @@ export const MapVisualization: React.FC<MapVisualizationProps> = ({
       </div>
     </div>
   );
-};
+});

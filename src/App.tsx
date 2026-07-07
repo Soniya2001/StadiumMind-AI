@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { 
   Activity, 
   Users, 
@@ -22,9 +22,9 @@ import {
   Sliders,
   Terminal as TermIcon
 } from "lucide-react";
-import { MapVisualization } from "./components/MapVisualization";
-import { ConsoleTerminal } from "./components/ConsoleTerminal";
-import { BlueprintConsole } from "./components/BlueprintConsole";
+const MapVisualization = lazy(() => import("./components/MapVisualization").then(module => ({ default: module.MapVisualization })));
+const ConsoleTerminal = lazy(() => import("./components/ConsoleTerminal").then(module => ({ default: module.ConsoleTerminal })));
+const BlueprintConsole = lazy(() => import("./components/BlueprintConsole").then(module => ({ default: module.BlueprintConsole })));
 import { getMockTranslation } from "./utils/translator";
 
 // Define TypeScript structures for our agent simulation
@@ -1169,25 +1169,27 @@ export default function App() {
 
             {/* RIGHT COLUMN - Live Stadium Map & Terminal Logs (7 Cols) */}
             <div className="xl:col-span-7 flex flex-col space-y-6">
-              
-              {/* Live Stadium Spatial SVG Map */}
-              <div className="h-[380px] shrink-0">
-                <MapVisualization
-                  activeScenarioId={simulationData ? selectedPresetId : null}
-                  selectedZone={selectedMapZone}
-                  onSelectZone={(zoneId) => setSelectedMapZone(zoneId)}
-                />
-              </div>
+              <Suspense fallback={<div className="p-4 text-slate-400 animate-pulse border border-slate-800 rounded bg-slate-900">Loading Map...</div>}>
+                {/* Live Stadium Spatial SVG Map */}
+                <div className="h-[380px] shrink-0">
+                  <MapVisualization
+                    activeScenarioId={simulationData ? selectedPresetId : null}
+                    selectedZone={selectedMapZone}
+                    onSelectZone={(zoneId) => setSelectedMapZone(zoneId)}
+                  />
+                </div>
+              </Suspense>
 
-              {/* Scrolling Terminal Agent Reasonings logs */}
-              <div className="flex-1 flex flex-col">
-                <ConsoleTerminal
-                  steps={simulationData ? simulationData.steps : []}
-                  isSimulating={isSimulating}
-                  activeStepIndex={activeStepIndex}
-                />
-              </div>
-
+              <Suspense fallback={<div className="p-4 text-slate-400 animate-pulse border border-slate-800 rounded bg-slate-900">Loading Terminal...</div>}>
+                {/* Scrolling Terminal Agent Reasonings logs */}
+                <div className="flex-1 flex flex-col">
+                  <ConsoleTerminal
+                    steps={simulationData ? simulationData.steps : []}
+                    isSimulating={isSimulating}
+                    activeStepIndex={activeStepIndex}
+                  />
+                </div>
+              </Suspense>
             </div>
 
           </div>
@@ -1195,7 +1197,9 @@ export default function App() {
 
         {activeTab === "blueprint" && (
           <div id="tabpanel-blueprint" role="tabpanel" aria-labelledby="tab-blueprint" className="max-w-7xl mx-auto">
-            <BlueprintConsole />
+            <Suspense fallback={<div className="p-8 text-center text-slate-400 animate-pulse">Loading Architecture Blueprint...</div>}>
+              <BlueprintConsole />
+            </Suspense>
           </div>
         )}
 

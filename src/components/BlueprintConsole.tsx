@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { BLUEPRINT_DATA, BlueprintSection } from "../data/blueprint";
 import { Search, BookOpen, Copy, Check, Filter } from "lucide-react";
 
-export const BlueprintConsole: React.FC = () => {
+export const BlueprintConsole: React.FC = React.memo(() => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSectionId, setSelectedSectionId] = useState("executive_summary");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -229,4 +229,4 @@ export const BlueprintConsole: React.FC = () => {
       </div>
     </div>
   );
-};
+});

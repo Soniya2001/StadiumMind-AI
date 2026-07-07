@@ -3,13 +3,29 @@ import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createServer as createViteServer } from "vite";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
 
+// Security Middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Vite requires unsafe-inline in dev mode
+}));
+
+// Rate Limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use(express.json());
+app.use("/api/", apiLimiter);
 
 // Lazy-initialize Gemini API to prevent crashes on startup if key is missing
 let aiClient: GoogleGenAI | null = null;
