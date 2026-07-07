@@ -121,10 +121,57 @@ export const ConsoleTerminal: React.FC<ConsoleTerminalProps> = ({
       {/* Terminal Body */}
       <div className="flex-1 p-4 overflow-y-auto space-y-3 min-h-[300px] max-h-[500px]">
         {visibleSteps.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center py-12 text-slate-500 space-y-2">
-            <Terminal className="h-8 w-8 text-slate-700 animate-pulse" />
-            <p>SYSTEM IDLE. AWAITING INCIDENT TRACE...</p>
-            <p className="text-[10px] text-slate-600 font-mono">SELECT A SCENARIO PRESET OR LOG A NEW FIELD ALERT TO ENGAGE AGENTS</p>
+          <div className="space-y-2.5 animate-fadeIn">
+            <div className="text-[10px] text-cyan-400 font-mono tracking-wider mb-2 uppercase border-b border-slate-900 pb-1.5 flex items-center justify-between">
+              <span>📡 ACTIVE BASELINE AMBIENT STREAM</span>
+              <span className="text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-900/30 px-1 py-0.5 rounded uppercase text-[8px] animate-pulse">● LIVE CORRIDOR TELEMETRY</span>
+            </div>
+            
+            <div className="flex items-start space-x-2 p-2 rounded bg-slate-900/30 border border-slate-900">
+              <span className="text-slate-500 font-bold">12:01:05</span>
+              <div>
+                <span className="text-emerald-400 font-bold bg-emerald-950 px-1 rounded text-[9px] uppercase font-mono mr-1.5">[CORE SUPERVISOR]</span>
+                <span className="text-slate-300 font-sans">Crowd occupancy margins nominal. All 32 physical corridors healthy.</span>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-2 p-2 rounded bg-slate-900/30 border border-slate-900">
+              <span className="text-slate-500 font-bold">12:03:12</span>
+              <div>
+                <span className="text-sky-400 font-bold bg-sky-950 px-1 rounded text-[9px] uppercase font-mono mr-1.5">[TRANSIT OUTLETS]</span>
+                <span className="text-slate-300 font-sans">Metro fleet terminal bay A check-in: 100% schedule consistency maintained.</span>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-2 p-2 rounded bg-slate-900/30 border border-slate-900">
+              <span className="text-slate-500 font-bold">12:05:40</span>
+              <div>
+                <span className="text-violet-400 font-bold bg-violet-950 px-1 rounded text-[9px] uppercase font-mono mr-1.5">[VOLUNTEER COGNITIVE]</span>
+                <span className="text-slate-300 font-sans">Sector rotational checklist fully validated. On-ground staff in standby position.</span>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-2 p-2 rounded bg-slate-900/30 border border-slate-900">
+              <span className="text-slate-500 font-bold">12:07:18</span>
+              <div>
+                <span className="text-amber-400 font-bold bg-amber-950 px-1 rounded text-[9px] uppercase font-mono mr-1.5">[DEVICES INTEGRATION]</span>
+                <span className="text-slate-300 font-sans">Gate B security scanner suite report: 21ms mean processing time. All systems green.</span>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-2 p-2 rounded bg-slate-900/30 border border-slate-900">
+              <span className="text-slate-500 font-bold">12:10:02</span>
+              <div>
+                <span className="text-teal-400 font-bold bg-teal-950 px-1 rounded text-[9px] uppercase font-mono mr-1.5">[RESOURCE CONTROL]</span>
+                <span className="text-slate-300 font-sans">Ecological bin capacity level monitoring: Current aggregate fill index is 34%.</span>
+              </div>
+            </div>
+
+            <div className="pt-4 flex flex-col items-center justify-center text-center text-slate-500 py-6 space-y-2 border-t border-slate-900 mt-2">
+              <Terminal className="h-6 w-6 text-slate-700 animate-pulse" />
+              <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Awaiting incident trigger trace...</p>
+              <p className="text-[9px] text-slate-600 font-mono">SELECT A PRESET FROM THE LEFT OR INJECT A CUSTOM DISPATCH TO BEGIN ORCHESTRATION</p>
+            </div>
           </div>
         ) : (
           visibleSteps.map((step, idx) => {

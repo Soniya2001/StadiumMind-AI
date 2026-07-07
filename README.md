@@ -27,6 +27,35 @@ Each of our six agents is modeled with a strict cognitive persona, localized tel
 
 ---
 
+## 🎨 Interactive Control Panel & Role-Based Viewports
+
+StadiumMind AI features a highly responsive, multi-perspective operator dashboard that allows operators to experience the stadium ecosystem from various vantage points:
+
+### 1. Multi-Agent Role Selector
+Switch seamlessly between five active on-ground personas to audit specialized checklists, itineraries, and localized tools:
+* **Operations Manager (`@manager`)**: The default high-level cockpit. Operators can trigger simulator presets (e.g., Gate 4 bottleneck, medical emergency, food spills) or dispatch custom natural language commands to watch Gemini orchestrate physical protocols in real-time.
+* **Field Volunteer (`@volunteer`)**: Equipped with a live **Instant Translation Utility** (translating English inquiries into Spanish, French, or Japanese) and dynamic, contextual **SOP Checklist Playbooks** synchronized automatically with Vertex AI.
+* **Tournament Fan (`@fan`)**: Displays personalized **Spectator Ticket Passes** (e.g., Seat details for MetLife Stadium, Sector B) alongside smart **Personalized Detour Advisories** directing them away from active crowd bottlenecks.
+* **Emergency Ops (`@emergency`)**: Provides immediate visibility into **Paramedic GPS Logistics**, showing ETA timers, live corridor clear signals, and active responder logs.
+* **Transit Admin (`@transit`)**: Monitors the active shuttle fleet occupancy, Metropolitan Line statuses, and fleet loop schedules.
+
+### 2. High-Fidelity Interactive Stadium Map
+An SVG-rendered interactive blueprint of the stadium. Clicking on any gate, sector, or first aid station triggers a detailed contextual popup overlay displaying:
+* **Queue Telemetry**: Live and projected queue wait-times (e.g., Gate 4 displaying "18 mins" current vs "31 mins" projected bottleneck wait-times).
+* **AI Action Recommendations**: Clear, actionable recommendations computed dynamically (e.g., "Open Gate 5 & redirect incoming spectator flow").
+* **System Confidence**: Real-time confidence index for system cluster planning.
+* **Color-Coded Statuses**: Visual feedback (Critical, Warning, Nominal) matching active telemetry states.
+
+### 3. Live Ambient Telemetry Stream
+When the system is idle (waiting for a simulator incident trigger), the terminal console is kept warm with a live baseline stream of ambient stadium logs. This feed aggregates updates from:
+* **Core Supervisor**: Physical corridor occupancy assessments.
+* **Transit Outlets**: Terminal schedules and fleet terminal status.
+* **Volunteer Cognitive**: Rotational checklist validations.
+* **Device Integrations**: Security scanner suites and speed performance telemetry.
+* **Resource Control**: Eco-bin capacity metrics.
+
+---
+
 ## 🛠️ Google Cloud & Data Architecture
 
 The architecture is designed to be production-ready and fully scale on **Google Cloud Platform (GCP)**:

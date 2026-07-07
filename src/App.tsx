@@ -63,6 +63,7 @@ interface SimulationResponse {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"operations" | "blueprint" | "agents" | "onboarding">("operations");
+  const [selectedRole, setSelectedRole] = useState<'manager' | 'volunteer' | 'fan' | 'emergency' | 'transit'>('manager');
   
   // Simulation states
   const [selectedPresetId, setSelectedPresetId] = useState<string>("gate_bottleneck");
@@ -81,6 +82,34 @@ export default function App() {
   const [activeIncidentTitle, setActiveIncidentTitle] = useState<string>("All Systems Secure");
   const [activeIncidentDesc, setActiveIncidentDesc] = useState<string>("Awaiting telemetry alarms. No incidents reported.");
   const [selectedMapZone, setSelectedMapZone] = useState<string | null>(null);
+
+  // Multilingual Translator States
+  const [translatorInput, setTranslatorInput] = useState("Where is the nearest first aid station?");
+  const [translatorLang, setTranslatorLang] = useState("es");
+  const [translatorOutput, setTranslatorOutput] = useState("¿Dónde está la estación de primeros auxilios más cercana?");
+
+  const getMockTranslation = (text: string, lang: string) => {
+    const t = text.toLowerCase();
+    if (lang === "es") {
+      if (t.includes("first aid")) return "¿Dónde está la estación de primeros auxilios más cercana?";
+      if (t.includes("exit")) return "¿Cómo llego a la salida más rápida?";
+      if (t.includes("lost")) return "He perdido mi boleto, ¿me puede ayudar?";
+      return `[Traducido al Español]: "${text}"`;
+    }
+    if (lang === "fr") {
+      if (t.includes("first aid")) return "Où se trouve le poste de secours le plus proche?";
+      if (t.includes("exit")) return "Comment accéder à la sortie la plus proche?";
+      if (t.includes("lost")) return "J'ai perdu mon billet, pouvez-vous m'aider?";
+      return `[Traduit en Français]: "${text}"`;
+    }
+    if (lang === "jp") {
+      if (t.includes("first aid")) return "救護所はどこですか？ (Kyūgosho wa doko desu ka?)";
+      if (t.includes("exit")) return "一番近い出口はどこですか？ (Ichiban chikai deguchi wa doko desu ka?)";
+      if (t.includes("lost")) return "チケットをなくしました。助けてもらえますか？";
+      return `[日本語訳]: "${text}"`;
+    }
+    return `[Translated]: "${text}"`;
+  };
 
   // Playback timer ref
   const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -378,195 +407,766 @@ export default function App() {
       {/* Main Grid Viewport */}
       <main className="flex-1 overflow-y-auto p-6 bg-slate-950/20">
         {activeTab === "operations" && (
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 max-w-7xl mx-auto h-full">
+          <div className="max-w-7xl mx-auto flex flex-col space-y-6 w-full">
             
-            {/* LEFT COLUMN - Status Panel, Triggers, & Inputs (5 Cols) */}
-            <div className="xl:col-span-5 flex flex-col space-y-6">
-              
-              {/* Metric Status Bento Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Crowd Level */}
-                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between h-[105px]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">Crowd Density</span>
-                    <Users className="h-4 w-4 text-slate-500" />
-                  </div>
-                  <div className="mt-2">
-                    <span className={`text-xl font-semibold tracking-tight ${
-                      crowdLevel === "Critical" ? "text-rose-400" :
-                      crowdLevel === "High" ? "text-amber-400" : "text-emerald-400"
-                    }`}>
-                      {crowdLevel}
-                    </span>
-                    <span className="text-[10px] text-slate-500 block font-mono mt-0.5 uppercase">
-                      {crowdLevel === "Critical" ? "🚨 Level: 9.2/10 Bottleneck" : "✓ Safe occupancy margin"}
-                    </span>
-                  </div>
+            {/* Multi-Agent Role Selector Dashboard Banner */}
+            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col space-y-3.5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800/60 pb-2.5">
+                <div>
+                  <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Active Operator Role Viewport</span>
+                  <h4 className="text-sm font-semibold text-slate-100 font-sans tracking-tight">Select active on-ground perspective to audit local checklists & itineraries</h4>
                 </div>
-
-                {/* Transit Status */}
-                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between h-[105px]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">Transit Outlets</span>
-                    <Bus className="h-4 w-4 text-slate-500" />
-                  </div>
-                  <div className="mt-2">
-                    <span className={`text-xl font-semibold tracking-tight ${
-                      transitStatus === "Delayed" ? "text-rose-400" :
-                      transitStatus === "Rerouted" ? "text-cyan-400" : "text-emerald-400"
-                    }`}>
-                      {transitStatus}
-                    </span>
-                    <span className="text-[10px] text-slate-500 block font-mono mt-0.5 uppercase">
-                      {transitStatus === "Delayed" ? "⚠️ Metro Corridors Halted" : "✓ Loops running smoothly"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Emergency Status */}
-                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between h-[105px]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">Security Matrix</span>
-                    <ShieldAlert className="h-4 w-4 text-slate-500" />
-                  </div>
-                  <div className="mt-2">
-                    <span className={`text-xl font-semibold tracking-tight ${
-                      safetyStatus === "Emergency" ? "text-rose-400" :
-                      safetyStatus === "Alert" ? "text-amber-400" : "text-emerald-400"
-                    }`}>
-                      {safetyStatus}
-                    </span>
-                    <span className="text-[10px] text-slate-500 block font-mono mt-0.5 uppercase">
-                      {safetyStatus === "Emergency" ? "🚨 Ambulance Dispatched" : "✓ Perimeters secure"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Sustainability score */}
-                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between h-[105px]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">Eco-Index</span>
-                    <Trash2 className="h-4 w-4 text-slate-500" />
-                  </div>
-                  <div className="mt-2">
-                    <span className="text-xl font-semibold tracking-tight text-slate-100">
-                      {sustainabilityIndex}%
-                    </span>
-                    <span className="text-[10px] text-slate-500 block font-mono mt-0.5 uppercase">
-                      {sustainabilityIndex < 75 ? "⚠️ Cleanup Sweeps Dispatched" : "✓ Recyclables optimized"}
-                    </span>
-                  </div>
+                <div className="flex items-center space-x-1 text-[10px] font-mono bg-slate-950/60 border border-slate-800 px-2 py-1 rounded">
+                  <span className="h-2 w-2 rounded-full bg-cyan-500 animate-ping"></span>
+                  <span className="text-slate-400">ROLE SYNC ACTIVE</span>
                 </div>
               </div>
-
-              {/* Scenario Quick Trigger Panel */}
-              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-3.5">
-                  <div className="flex items-center space-x-1.5">
-                    <Sliders className="h-4 w-4 text-cyan-400" />
-                    <h3 className="text-xs font-semibold text-slate-100 font-sans tracking-tight uppercase">Simulate Hackathon Incidents</h3>
+              
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5">
+                <button
+                  onClick={() => setSelectedRole("manager")}
+                  className={`flex items-center space-x-2.5 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                    selectedRole === "manager"
+                      ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-200 shadow-[0_0_15px_rgba(6,182,212,0.15)] font-semibold"
+                      : "bg-slate-950/60 border-slate-850 hover:border-slate-800 text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Activity className={`h-4 w-4 shrink-0 ${selectedRole === "manager" ? "text-cyan-400 animate-pulse" : "text-slate-500"}`} />
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold tracking-tight truncate">Ops Manager</div>
+                    <div className="text-[8px] font-mono uppercase text-slate-500 tracking-wider mt-0.5">Control & Sim</div>
                   </div>
-                  {simulationData && (
-                    <button
-                      onClick={handleClearIncident}
-                      className="text-[10px] font-mono bg-slate-800 hover:bg-slate-750 text-slate-300 px-2.5 py-1 rounded cursor-pointer"
-                    >
-                      CLEAR STATE
-                    </button>
+                </button>
+
+                <button
+                  onClick={() => setSelectedRole("volunteer")}
+                  className={`flex items-center space-x-2.5 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                    selectedRole === "volunteer"
+                      ? "bg-violet-500/10 border-violet-500/50 text-violet-200 shadow-[0_0_15px_rgba(139,92,246,0.15)] font-semibold"
+                      : "bg-slate-950/60 border-slate-850 hover:border-slate-800 text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Users className={`h-4 w-4 shrink-0 ${selectedRole === "volunteer" ? "text-violet-400 animate-pulse" : "text-slate-500"}`} />
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold tracking-tight truncate">Field Volunteer</div>
+                    <div className="text-[8px] font-mono uppercase text-slate-500 tracking-wider mt-0.5">SOP & Translate</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSelectedRole("fan")}
+                  className={`flex items-center space-x-2.5 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                    selectedRole === "fan"
+                      ? "bg-amber-500/10 border-amber-500/50 text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.15)] font-semibold"
+                      : "bg-slate-950/60 border-slate-850 hover:border-slate-800 text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <MapPin className={`h-4 w-4 shrink-0 ${selectedRole === "fan" ? "text-amber-400 animate-pulse" : "text-slate-500"}`} />
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold tracking-tight truncate">Tournament Fan</div>
+                    <div className="text-[8px] font-mono uppercase text-slate-500 tracking-wider mt-0.5">Guidance & Ticket</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSelectedRole("emergency")}
+                  className={`flex items-center space-x-2.5 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                    selectedRole === "emergency"
+                      ? "bg-rose-500/10 border-rose-500/50 text-rose-200 shadow-[0_0_15px_rgba(244,63,94,0.15)] font-semibold"
+                      : "bg-slate-950/60 border-slate-850 hover:border-slate-800 text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <ShieldAlert className={`h-4 w-4 shrink-0 ${selectedRole === "emergency" ? "text-rose-400 animate-pulse" : "text-slate-500"}`} />
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold tracking-tight truncate">Emergency Ops</div>
+                    <div className="text-[8px] font-mono uppercase text-slate-500 tracking-wider mt-0.5">EMS Dispatch</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSelectedRole("transit")}
+                  className={`flex items-center space-x-2.5 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                    selectedRole === "transit"
+                      ? "bg-sky-500/10 border-sky-500/50 text-sky-200 shadow-[0_0_15px_rgba(14,165,233,0.15)] font-semibold"
+                      : "bg-slate-950/60 border-slate-850 hover:border-slate-800 text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Bus className={`h-4 w-4 shrink-0 ${selectedRole === "transit" ? "text-sky-400 animate-pulse" : "text-slate-500"}`} />
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold tracking-tight truncate">Transit Admin</div>
+                    <div className="text-[8px] font-mono uppercase text-slate-500 tracking-wider mt-0.5">Fleet Loops</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Main Console Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full h-full">
+              
+              {/* LEFT COLUMN - Status Panel, Triggers, & Inputs (5 Cols) */}
+              <div className="xl:col-span-5 flex flex-col space-y-6">
+                
+                {/* HEADLINE KPI: Overall Stadium Status */}
+                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col space-y-3 shadow-lg">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2 flex-wrap gap-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                          safetyStatus === "Emergency" || crowdLevel === "Critical" ? "bg-red-400" :
+                          safetyStatus === "Alert" || crowdLevel === "High" ? "bg-amber-400" : "bg-emerald-400"
+                        }`}></span>
+                        <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                          safetyStatus === "Emergency" || crowdLevel === "Critical" ? "bg-red-500" :
+                          safetyStatus === "Alert" || crowdLevel === "High" ? "bg-amber-500" : "bg-emerald-500"
+                        }`}></span>
+                      </span>
+                      <span className="text-[10px] font-mono uppercase text-slate-400 tracking-wider font-semibold">Stadium Control Status</span>
+                    </div>
+                    <span className={`text-[10px] font-mono font-bold uppercase border px-2 py-0.5 rounded-full ${
+                      safetyStatus === "Emergency" || crowdLevel === "Critical" ? "text-red-400 bg-red-950/20 border-red-900/40" :
+                      safetyStatus === "Alert" || crowdLevel === "High" ? "text-amber-400 bg-amber-950/20 border-amber-900/40" : 
+                      "text-emerald-400 bg-emerald-950/20 border-emerald-900/40"
+                    }`}>
+                      {safetyStatus === "Emergency" || crowdLevel === "Critical" ? "🔴 Critical Alarm Triggered" :
+                       safetyStatus === "Alert" || crowdLevel === "High" ? "🟡 Elevated Warning Active" : "🟢 Operational Baseline Safe"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2.5 text-center pt-1">
+                    <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-2.5 flex flex-col justify-center">
+                      <span className="text-[8px] font-mono uppercase text-slate-500 tracking-wider">Occupancy</span>
+                      <span className="text-sm font-semibold text-slate-200 font-mono mt-0.5">
+                        {selectedPresetId === "gate_bottleneck" && simulationData ? "84%" : "62%"}
+                      </span>
+                    </div>
+                    <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-2.5 flex flex-col justify-center">
+                      <span className="text-[8px] font-mono uppercase text-slate-500 tracking-wider">Active Alarms</span>
+                      <span className={`text-sm font-bold font-mono mt-0.5 ${simulationData ? "text-rose-400" : "text-slate-300"}`}>
+                        {simulationData ? "1" : "0"}
+                      </span>
+                    </div>
+                    <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-2.5 flex flex-col justify-center">
+                      <span className="text-[8px] font-mono uppercase text-slate-500 tracking-wider">Agents Active</span>
+                      <span className="text-sm font-semibold text-cyan-400 font-mono mt-0.5">6</span>
+                    </div>
+                    <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-2.5 flex flex-col justify-center">
+                      <span className="text-[8px] font-mono uppercase text-slate-500 tracking-wider">Risks Flagged</span>
+                      <span className={`text-sm font-bold font-mono mt-0.5 ${simulationData ? "text-amber-400" : "text-slate-300"}`}>
+                        {simulationData ? "2" : "0"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metric Status Bento Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Crowd Level */}
+                  <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between h-[105px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">Crowd Density</span>
+                      <Users className="h-4 w-4 text-slate-500" />
+                    </div>
+                    <div className="mt-2">
+                      <span className={`text-xl font-semibold tracking-tight ${
+                        crowdLevel === "Critical" ? "text-rose-400" :
+                        crowdLevel === "High" ? "text-amber-400" : "text-emerald-400"
+                      }`}>
+                        {crowdLevel}
+                      </span>
+                      <span className="text-[10px] text-slate-500 block font-mono mt-0.5 uppercase">
+                        {crowdLevel === "Critical" ? "🚨 Level: 9.2/10 Bottleneck" : "✓ Safe occupancy margin"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Transit Status */}
+                  <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between h-[105px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">Transit Outlets</span>
+                      <Bus className="h-4 w-4 text-slate-500" />
+                    </div>
+                    <div className="mt-2">
+                      <span className={`text-xl font-semibold tracking-tight ${
+                        transitStatus === "Delayed" ? "text-rose-400" :
+                        transitStatus === "Rerouted" ? "text-cyan-400" : "text-emerald-400"
+                      }`}>
+                        {transitStatus}
+                      </span>
+                      <span className="text-[10px] text-slate-500 block font-mono mt-0.5 uppercase">
+                        {transitStatus === "Delayed" ? "⚠️ Metro Corridors Halted" : "✓ Loops running smoothly"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Emergency Status */}
+                  <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between h-[105px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">Security Matrix</span>
+                      <ShieldAlert className="h-4 w-4 text-slate-500" />
+                    </div>
+                    <div className="mt-2">
+                      <span className={`text-xl font-semibold tracking-tight ${
+                        safetyStatus === "Emergency" ? "text-rose-400" :
+                        safetyStatus === "Alert" ? "text-amber-400" : "text-emerald-400"
+                      }`}>
+                        {safetyStatus}
+                      </span>
+                      <span className="text-[10px] text-slate-500 block font-mono mt-0.5 uppercase">
+                        {safetyStatus === "Emergency" ? "🚨 Ambulance Dispatched" : "✓ Perimeters secure"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Sustainability score */}
+                  <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between h-[105px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">Eco-Index</span>
+                      <Trash2 className="h-4 w-4 text-slate-500" />
+                    </div>
+                    <div className="mt-2">
+                      <span className="text-xl font-semibold tracking-tight text-slate-100">
+                        {sustainabilityIndex}%
+                      </span>
+                      <span className="text-[10px] text-slate-500 block font-mono mt-0.5 uppercase">
+                        {sustainabilityIndex < 75 ? "⚠️ Cleanup Sweeps Dispatched" : "✓ Recyclables optimized"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ROLE CONTROLLER VIEW: Operations Manager */}
+                {selectedRole === "manager" && (
+                  <div className="space-y-6">
+                    {/* Scenario Quick Trigger Panel */}
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3.5">
+                        <div className="flex items-center space-x-1.5">
+                          <Sliders className="h-4 w-4 text-cyan-400" />
+                          <h3 className="text-xs font-semibold text-slate-100 font-sans tracking-tight uppercase">Simulate Hackathon Incidents</h3>
+                        </div>
+                        {simulationData && (
+                          <button
+                            onClick={handleClearIncident}
+                            className="text-[10px] font-mono bg-slate-800 hover:bg-slate-750 text-slate-300 px-2.5 py-1 rounded cursor-pointer"
+                          >
+                            CLEAR STATE
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {presets.map((preset) => (
+                          <button
+                            key={preset.id}
+                            onClick={() => {
+                              setSelectedPresetId(preset.id);
+                              handleTriggerSimulation(preset.id);
+                            }}
+                            disabled={isSimulating}
+                            className={`px-3 py-2.5 rounded-lg border text-left transition-all duration-150 flex items-start space-x-2.5 cursor-pointer ${
+                              selectedPresetId === preset.id && simulationData
+                                ? "bg-slate-950 border-cyan-500 text-slate-100 ring-1 ring-cyan-500/20"
+                                : "bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200"
+                            } ${isSimulating ? "opacity-60 cursor-not-allowed" : ""}`}
+                          >
+                            <div className="mt-0.5">{preset.icon}</div>
+                            <div className="min-w-0">
+                              <div className="text-xs font-semibold font-sans tracking-tight leading-tight truncate">{preset.name}</div>
+                              <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-0.5">{preset.category}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Alert Field Form */}
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+                      <div className="flex items-center space-x-1.5 mb-3">
+                        <TermIcon className="h-4 w-4 text-cyan-400" />
+                        <h3 className="text-xs font-semibold text-slate-100 font-sans tracking-tight uppercase">Field Dispatch Command (Custom Prompt)</h3>
+                      </div>
+                      
+                      <form onSubmit={handleCustomAlertSubmit} className="space-y-3">
+                        <textarea
+                          placeholder="Log a custom stadium incident (e.g. 'Stairwell D handrail loose' or 'VIP Fan lost ticketing details near Gate 2 in French'). Click send to watch Gemini orchestrate the agents live..."
+                          value={customAlertText}
+                          onChange={(e) => setCustomAlertText(e.target.value)}
+                          disabled={isSimulating}
+                          rows={3}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 font-sans resize-none leading-relaxed"
+                        />
+                        
+                        <div className="flex justify-between items-center gap-4">
+                          <span className="text-[10px] font-mono text-slate-500">
+                            {isSimulating ? "⚡ AGENT COORDINATION IN PLAY" : "📝 GEMINI LIVE INFERENCE SECURE"}
+                          </span>
+                          <button
+                            type="submit"
+                            disabled={isSimulating || !customAlertText.trim()}
+                            className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold text-xs rounded-lg flex items-center space-x-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          >
+                            <span>DISPATCH</span>
+                            <Send className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
+
+                {/* ROLE CONTROLLER VIEW: On-Ground Field Volunteer */}
+                {selectedRole === "volunteer" && (
+                  <div className="space-y-6">
+                    {/* Multilingual Instant Translator Playground */}
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-3.5">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <div className="flex items-center space-x-1.5">
+                          <Languages className="h-4 w-4 text-violet-400" />
+                          <h3 className="text-xs font-semibold text-slate-100 font-sans tracking-tight uppercase">Instant Translation Utility</h3>
+                        </div>
+                        <span className="text-[9px] font-mono text-violet-400 uppercase tracking-widest bg-violet-950/50 border border-violet-900/30 px-2 py-0.5 rounded">
+                          Live On-Ground Helper
+                        </span>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <div>
+                          <label className="text-[9px] font-mono text-slate-500 uppercase block mb-1">On-Ground Spoken Request</label>
+                          <textarea
+                            value={translatorInput}
+                            onChange={(e) => {
+                              setTranslatorInput(e.target.value);
+                              setTranslatorOutput(getMockTranslation(e.target.value, translatorLang));
+                            }}
+                            rows={2}
+                            placeholder="Type foreign inquiry or task details..."
+                            className="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-violet-500 font-sans resize-none"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 bg-slate-950/40 p-2 rounded border border-slate-900">
+                          <span className="text-[9px] font-mono text-slate-400">Target Language:</span>
+                          <div className="flex space-x-1">
+                            {[
+                              { code: "es", label: "Español" },
+                              { code: "fr", label: "Français" },
+                              { code: "jp", label: "日本語" }
+                            ].map((lang) => (
+                              <button
+                                key={lang.code}
+                                onClick={() => {
+                                  setTranslatorLang(lang.code);
+                                  setTranslatorOutput(getMockTranslation(translatorInput, lang.code));
+                                }}
+                                className={`px-2 py-1 rounded text-[9px] font-mono tracking-tight cursor-pointer ${
+                                  translatorLang === lang.code
+                                    ? "bg-violet-900/40 border border-violet-700/50 text-violet-300"
+                                    : "bg-slate-900 border border-slate-800 text-slate-500 hover:text-slate-300"
+                                }`}
+                              >
+                                {lang.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-850">
+                          <span className="text-[8px] font-mono text-slate-500 uppercase block mb-1.5">Translated Speech Bubble</span>
+                          <p className="text-xs font-sans text-violet-300 italic font-medium leading-relaxed">
+                            {translatorOutput || "Type above to generate immediate translated SOP guides..."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Active SOP On-Ground Tasks Checklist */}
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-3.5">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <div className="flex items-center space-x-1.5">
+                          <CheckCircle2 className="h-4 w-4 text-violet-400" />
+                          <h3 className="text-xs font-semibold text-slate-100 font-sans tracking-tight uppercase">SOP Checklist playbooks</h3>
+                        </div>
+                        <span className="text-[9px] font-mono text-emerald-400 font-bold bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">Vertex AI SOP Search</span>
+                      </div>
+
+                      <div className="space-y-2.5 text-xs text-slate-300 font-sans">
+                        {simulationData ? (
+                          <>
+                            <div className="flex items-start space-x-2 bg-slate-950/40 p-2 rounded border border-slate-900">
+                              <input type="checkbox" defaultChecked className="mt-0.5 rounded accent-violet-500 shrink-0" />
+                              <div>
+                                <span className="font-semibold text-slate-200">Cordon off the immediate area</span>
+                                <p className="text-[10px] text-slate-400 mt-0.5">Ensure physical safety barrier is completed near Sectors B & D.</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start space-x-2 bg-slate-950/40 p-2 rounded border border-slate-900">
+                              <input type="checkbox" defaultChecked className="mt-0.5 rounded accent-violet-500 shrink-0" />
+                              <div>
+                                <span className="font-semibold text-slate-200">Deploy dynamic arrow signages</span>
+                                <p className="text-[10px] text-slate-400 mt-0.5">Point portable LED signage East to divert crowds toward Gate 5.</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start space-x-2 bg-slate-950/40 p-2 rounded border border-slate-900">
+                              <input type="checkbox" className="mt-0.5 rounded accent-violet-500 shrink-0" />
+                              <div>
+                                <span className="font-semibold text-slate-200">Initiate multilingual announcements</span>
+                                <p className="text-[10px] text-slate-400 mt-0.5">Broadcast Gate 5 bypass messages in English, French, Spanish.</p>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-start space-x-2 bg-slate-950/20 p-2 rounded border border-slate-900">
+                              <input type="checkbox" defaultChecked className="mt-0.5 rounded accent-violet-500 shrink-0" />
+                              <div>
+                                <span className="font-semibold text-slate-200">Staff Gate check-ins (Gate 1 to 5)</span>
+                                <p className="text-[10px] text-slate-400 mt-0.5">Confirm all volunteers checked in via terminal app.</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start space-x-2 bg-slate-950/20 p-2 rounded border border-slate-900">
+                              <input type="checkbox" defaultChecked className="mt-0.5 rounded accent-violet-500 shrink-0" />
+                              <div>
+                                <span className="font-semibold text-slate-200">Baseline language translation modules check</span>
+                                <p className="text-[10px] text-slate-400 mt-0.5">Ensure real-time dictionary datasets are synchronized.</p>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ROLE CONTROLLER VIEW: Tournament Fan Hub */}
+                {selectedRole === "fan" && (
+                  <div className="space-y-6">
+                    {/* Ticket Pass summary */}
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <div className="flex items-center space-x-1.5">
+                          <MapPin className="h-4 w-4 text-amber-400" />
+                          <h3 className="text-xs font-semibold text-slate-100 font-sans tracking-tight uppercase">Spectator Ticket Pass</h3>
+                        </div>
+                        <span className="text-[9px] font-mono text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-900/30 px-2 py-0.5 rounded">
+                          VERIFIED ✓
+                        </span>
+                      </div>
+
+                      <div className="bg-gradient-to-r from-slate-950 to-slate-900 p-3 rounded-lg border border-slate-850 space-y-2 font-mono text-[11px] text-slate-300">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">MATCH:</span>
+                          <span className="text-slate-200 font-bold">MEXICO vs USA (WC '26)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">STADIUM:</span>
+                          <span className="text-slate-200">METLIFE STADIUM, NY/NJ</span>
+                        </div>
+                        <div className="flex justify-between border-t border-slate-900 pt-2 text-xs">
+                          <span className="text-slate-500">SEAT DETAIL:</span>
+                          <span className="text-amber-400 font-bold">SECTOR B, ROW 14, SEAT 22</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950/30 p-2.5 rounded border border-slate-900 text-xs">
+                        <span className="text-[8px] font-mono text-slate-500 block uppercase">Personalized Detour Advisory</span>
+                        <p className="text-[11px] text-slate-300 font-sans mt-1 leading-relaxed">
+                          {selectedPresetId === "gate_bottleneck" && simulationData ? (
+                            <span className="text-amber-400 font-semibold">
+                              ⚠️ Detour Alert: Avoid Gate 4. Your sector is best accessed via EAST Gate 5 (3 mins queue) to avoid 31 mins bottleneck.
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">
+                              ✓ Normal Route: Enter via Gate 4 (Current queue is less than 4 mins). Enjoy the FIFA matchday tournament!
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ROLE CONTROLLER VIEW: Emergency Ops */}
+                {selectedRole === "emergency" && (
+                  <div className="space-y-6">
+                    {/* EMS dispatch stats */}
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <div className="flex items-center space-x-1.5">
+                          <ShieldAlert className="h-4 w-4 text-rose-400" />
+                          <h3 className="text-xs font-semibold text-slate-100 font-sans tracking-tight uppercase">Paramedic GPS Logistics</h3>
+                        </div>
+                        <span className="text-[9px] font-mono text-rose-400 bg-rose-950/40 border border-rose-900/30 px-2 py-0.5 rounded uppercase font-bold">
+                          Life Safety
+                        </span>
+                      </div>
+
+                      <div className="space-y-2.5 text-xs">
+                        <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-850 space-y-1.5 font-mono text-[10px]">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">EMS UNIT CODE:</span>
+                            <span className="text-slate-200">PARAMEDICS TEAM #4</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">ACTIVE POSITION:</span>
+                            <span className="text-slate-200">SECTOR B CORRIDOR</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">INCIDENT ETA:</span>
+                            <span className="text-rose-400 font-bold">1m 45s (GPS SYNCED)</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">ROUTE STATUS:</span>
+                            <span className="text-emerald-400">CLEARED BY CROWD BOT ✓</span>
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-950/30 p-2.5 rounded border border-slate-900 font-sans">
+                          <span className="text-[8px] font-mono text-slate-500 block uppercase font-bold">Paramedic Dispatch Playbook</span>
+                          <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                            {selectedPresetId === "medical_incident" && simulationData ? (
+                              <span>Emergency Coordinator deployed paramedics EMS team #4. Crowd Agent instructed to clear access corridor B immediately.</span>
+                            ) : (
+                              <span className="text-slate-400">No medical dispatches active. EMS units parked at standby stations East & West.</span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ROLE CONTROLLER VIEW: Transit Admin */}
+                {selectedRole === "transit" && (
+                  <div className="space-y-6">
+                    {/* Shuttle stats */}
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <div className="flex items-center space-x-1.5">
+                          <Bus className="h-4 w-4 text-sky-400" />
+                          <h3 className="text-xs font-semibold text-slate-100 font-sans tracking-tight uppercase">Fleet Loop Dispatch</h3>
+                        </div>
+                        <span className="text-[9px] font-mono text-sky-400 uppercase bg-sky-950/40 border border-sky-900/30 px-2 py-0.5 rounded font-bold">
+                          Transit Fleet
+                        </span>
+                      </div>
+
+                      <div className="space-y-2.5 text-xs font-mono text-[10px] text-slate-300">
+                        <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-850 space-y-1.5">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">ACTIVE SHUTTLE FLEET:</span>
+                            <span className="text-slate-200">14 / 16 STANDBY RUNNING</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">AGGREGATE SYSTEM LOAD:</span>
+                            <span className="text-slate-200">92% TOTAL CAPACITY</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">TERMINAL BAY REROUTE:</span>
+                            <span className={selectedPresetId === "transit_delay" ? "text-amber-400 font-bold" : "text-emerald-400"}>
+                              {selectedPresetId === "transit_delay" ? "ACTIVE DETOUR B" : "NORMAL CORRIDOR"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-950/30 p-2.5 rounded border border-slate-900 font-sans text-[11px]">
+                          <span className="text-[8px] font-mono text-slate-500 block uppercase">Transit Delays Monitor Feed</span>
+                          <p className="text-slate-300 mt-1 leading-relaxed">
+                            {selectedPresetId === "transit_delay" && simulationData ? (
+                              <span className="text-rose-400 font-semibold">
+                                Metro suspension has affected 1,200 inbound fans. Standby loop B has been triggered with 4x emergency reserves.
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">
+                                All transit loops functioning nominally. Transit outlets have sufficient operational buffer.
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Active Incident Details Card */}
+                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between min-h-[120px] shadow-lg">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">Active Alarm Monitor</span>
+                      {loadingSimulation ? (
+                        <span className="text-[10px] font-mono text-cyan-400 animate-pulse uppercase">Planning...</span>
+                      ) : (
+                        <span className={`h-2 w-2 rounded-full ${
+                          safetyStatus === "Emergency" ? "bg-rose-500 animate-pulse" :
+                          safetyStatus === "Alert" ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
+                        }`} />
+                      )}
+                    </div>
+                    <h4 className="text-xs font-semibold text-slate-200 font-sans tracking-tight">{activeIncidentTitle}</h4>
+                    <p className="text-[11px] text-slate-400 font-sans mt-1.5 leading-relaxed">{activeIncidentDesc}</p>
+                  </div>
+
+                  {/* Display map selection details */}
+                  {selectedMapZone && (
+                    <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono">
+                      <div className="flex items-center space-x-1 text-cyan-400">
+                        <MapPin className="h-3 w-3" />
+                        <span>ZONE SELECTED: {selectedMapZone}</span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedMapZone(null)}
+                        className="text-slate-500 hover:text-slate-300"
+                      >
+                        [Deselect]
+                      </button>
+                    </div>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
-                  {presets.map((preset) => (
-                    <button
-                      key={preset.id}
-                      onClick={() => {
-                        setSelectedPresetId(preset.id);
-                        handleTriggerSimulation(preset.id);
-                      }}
-                      disabled={isSimulating}
-                      className={`px-3 py-2.5 rounded-lg border text-left transition-all duration-150 flex items-start space-x-2.5 cursor-pointer ${
-                        selectedPresetId === preset.id && simulationData
-                          ? "bg-slate-950 border-cyan-500 text-slate-100 ring-1 ring-cyan-500/20"
-                          : "bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200"
-                      } ${isSimulating ? "opacity-60 cursor-not-allowed" : ""}`}
-                    >
-                      <div className="mt-0.5">{preset.icon}</div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-semibold font-sans tracking-tight leading-tight truncate">{preset.name}</div>
-                        <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-0.5">{preset.category}</div>
+                {/* AI Recommendation Reasoning Card */}
+                {simulationData && (
+                  <div className="bg-slate-900/60 border border-cyan-500/30 rounded-xl p-4 space-y-3.5 shadow-lg animate-fadeIn">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                      <div className="flex items-center space-x-1.5">
+                        <Cpu className="h-4 w-4 text-cyan-400 animate-pulse" />
+                        <h4 className="text-xs font-semibold text-slate-100 font-sans tracking-tight uppercase">AI Copilot Recommendation</h4>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom Alert Field Form */}
-              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-                <div className="flex items-center space-x-1.5 mb-3">
-                  <TermIcon className="h-4 w-4 text-cyan-400" />
-                  <h3 className="text-xs font-semibold text-slate-100 font-sans tracking-tight uppercase">Field Dispatch Command (Custom Prompt)</h3>
-                </div>
-                
-                <form onSubmit={handleCustomAlertSubmit} className="space-y-3">
-                  <textarea
-                    placeholder="Log a custom stadium incident (e.g. 'Stairwell D handrail loose' or 'VIP Fan lost ticketing details near Gate 2 in French'). Click send to watch Gemini orchestrate the agents live..."
-                    value={customAlertText}
-                    onChange={(e) => setCustomAlertText(e.target.value)}
-                    disabled={isSimulating}
-                    rows={3}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 font-sans resize-none leading-relaxed"
-                  />
-                  
-                  <div className="flex justify-between items-center gap-4">
-                    <span className="text-[10px] font-mono text-slate-500">
-                      {isSimulating ? "⚡ AGENT COORDINATION IN PLAY" : "📝 GEMINI LIVE INFERENCE SECURE"}
-                    </span>
-                    <button
-                      type="submit"
-                      disabled={isSimulating || !customAlertText.trim()}
-                      className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold text-xs rounded-lg flex items-center space-x-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                    >
-                      <span>DISPATCH</span>
-                      <Send className="h-3 w-3" />
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {/* Active Incident Details Card */}
-              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex-1 flex flex-col justify-between min-h-[120px]">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">Active Alarm Monitor</span>
-                    {loadingSimulation ? (
-                      <span className="text-[10px] font-mono text-cyan-400 animate-pulse uppercase">Planning...</span>
-                    ) : (
-                      <span className={`h-2 w-2 rounded-full ${
-                        safetyStatus === "Emergency" ? "bg-rose-500 animate-pulse" :
-                        safetyStatus === "Alert" ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
-                      }`} />
-                    )}
-                  </div>
-                  <h4 className="text-xs font-semibold text-slate-200 font-sans tracking-tight">{activeIncidentTitle}</h4>
-                  <p className="text-[11px] text-slate-400 font-sans mt-1.5 leading-relaxed">{activeIncidentDesc}</p>
-                </div>
-
-                {/* Display map selection details */}
-                {selectedMapZone && (
-                  <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono">
-                    <div className="flex items-center space-x-1 text-cyan-400">
-                      <MapPin className="h-3 w-3" />
-                      <span>ZONE SELECTED: {selectedMapZone}</span>
+                      <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/50 border border-emerald-900/30 px-1.5 py-0.5 rounded">
+                        Confidence: 96%
+                      </span>
                     </div>
-                    <button
-                      onClick={() => setSelectedMapZone(null)}
-                      className="text-slate-500 hover:text-slate-300"
-                    >
-                      [Deselect]
-                    </button>
+                    
+                    <div className="space-y-3 text-xs">
+                      <div className="bg-slate-950/40 p-2.5 rounded border border-slate-850">
+                        <span className="text-[9px] font-mono text-slate-500 uppercase block mb-1">Scenario Analysis reasoning</span>
+                        <p className="text-slate-300 font-sans leading-relaxed text-[11px]">
+                          {simulationData.scenarioDescription}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <span className="text-[9px] font-mono text-slate-500 uppercase block font-bold">Orchestrated Agent Dispatches</span>
+                        <div className="grid grid-cols-1 gap-1.5 font-mono text-[10px] text-slate-300">
+                          {selectedPresetId === "gate_bottleneck" && (
+                            <>
+                              <div className="flex items-center space-x-2 text-cyan-300 bg-slate-950/40 p-1.5 rounded border border-slate-900">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+                                <span>[Crowd Bot] Open emergency exit Gate 5 to absorb load</span>
+                              </div>
+                              <div className="flex items-center space-x-2 text-violet-300 bg-slate-950/40 p-1.5 rounded border border-slate-900">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-violet-400 shrink-0" />
+                                <span>[Volunteer Bot] Mobilize 4x dynamic multilingual coordinators</span>
+                              </div>
+                              <div className="flex items-center space-x-2 text-amber-300 bg-slate-950/40 p-1.5 rounded border border-slate-900">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                                <span>[Fan Bot] Push custom localized detours inside matchday app</span>
+                              </div>
+                            </>
+                          )}
+                          {selectedPresetId === "medical_incident" && (
+                            <>
+                              <div className="flex items-center space-x-2 text-rose-300 bg-slate-950/40 p-1.5 rounded border border-slate-900">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                                <span>[Emergency Bot] Route Paramedic EMS Team 4 via Perimeter Road</span>
+                              </div>
+                              <div className="flex items-center space-x-2 text-cyan-300 bg-slate-950/40 p-1.5 rounded border border-slate-900">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+                                <span>[Crowd Bot] Cordon Sector B access point and hold crowds</span>
+                              </div>
+                              <div className="flex items-center space-x-2 text-violet-300 bg-slate-950/40 p-1.5 rounded border border-slate-900">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-violet-400 shrink-0" />
+                                <span>[Volunteer Bot] Reassure friends & translate EMS instructions</span>
+                              </div>
+                            </>
+                          )}
+                          {selectedPresetId === "transit_delay" && (
+                            <>
+                              <div className="flex items-center space-x-2 text-sky-300 bg-slate-950/40 p-1.5 rounded border border-slate-900">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-sky-400 shrink-0" />
+                                <span>[Transit Bot] Redirect shuttle bus lines to terminal bay B</span>
+                              </div>
+                              <div className="flex items-center space-x-2 text-violet-300 bg-slate-950/40 p-1.5 rounded border border-slate-900">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-violet-400 shrink-0" />
+                                <span>[Volunteer Bot] Setup dynamic dynamic LED signposts on loops</span>
+                              </div>
+                              <div className="flex items-center space-x-2 text-amber-300 bg-slate-950/40 p-1.5 rounded border border-slate-900">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                                <span>[Fan Bot] Update departure timetables inside matchday widget</span>
+                              </div>
+                            </>
+                          )}
+                          {selectedPresetId === "sustainability_spill" && (
+                            <>
+                              <div className="flex items-center space-x-2 text-teal-300 bg-slate-950/40 p-1.5 rounded border border-slate-900">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-teal-400 shrink-0" />
+                                <span>[Sustainability Bot] Sweep Plaza C concession paths for organic waste</span>
+                              </div>
+                              <div className="flex items-center space-x-2 text-violet-300 bg-slate-950/40 p-1.5 rounded border border-slate-900">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-violet-400 shrink-0" />
+                                <span>[Volunteer Bot] Place immediate hazard warnings around concession C</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1.5 text-[9px] font-mono text-slate-400 border-t border-slate-850">
+                        <span>ESTIMATED CONVERGENCE RESOLUTION TIME</span>
+                        <span className="text-cyan-400 font-bold">~ 7 minutes</span>
+                      </div>
+                    </div>
                   </div>
                 )}
+
+                {/* Incident Resolution Timeline Metrics Card */}
+                {simulationData && activeStepIndex === simulationData.steps.length - 1 && !isSimulating && (
+                  <div className="bg-slate-900/80 border border-emerald-500/30 rounded-xl p-4.5 space-y-3.5 shadow-xl animate-fadeIn">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                      <div className="flex items-center space-x-1.5">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400 animate-pulse" />
+                        <h4 className="text-xs font-semibold text-slate-100 font-sans tracking-tight uppercase">Remediation Timeline Report</h4>
+                      </div>
+                      <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-900/30 px-1.5 py-0.5 rounded">
+                        RESOLVED ✓
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 text-xs">
+                      <div className="grid grid-cols-2 gap-2.5 text-[10px] font-mono bg-slate-950/60 p-2.5 rounded border border-slate-850">
+                        <div>
+                          <span className="text-slate-500 block text-[8px] uppercase">Incident Duration</span>
+                          <span className="text-slate-200 font-semibold font-sans">31 seconds (AI dispatch)</span>
+                        </div>
+                        <div>
+                          <span className="text-emerald-400 block text-[8px] uppercase">Delay Prevented</span>
+                          <span className="text-emerald-400 font-bold font-sans">18 minutes projected</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[8px] uppercase">Agents Involved</span>
+                          <span className="text-slate-200 font-semibold font-sans">6 active ADK bots</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[8px] uppercase">Volunteers Dispatched</span>
+                          <span className="text-slate-200 font-semibold font-sans">4 personnel mobilized</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950/20 p-2.5 rounded border border-slate-850">
+                        <span className="text-[9px] font-mono text-slate-500 uppercase block mb-1.5 font-bold text-slate-400">Post-Action Audit Metrics</span>
+                        <ul className="space-y-1.5 font-mono text-[10px] text-slate-400">
+                          <li>• Fans redirected: <span className="text-cyan-400 font-bold">512 spectators</span></li>
+                          <li>• Real-time languages translated: <span className="text-violet-400 font-bold">3 (en, es, fr)</span></li>
+                          <li>• Infrastructure load drop: <span className="text-emerald-400 font-bold">-40% bottleneck force</span></li>
+                        </ul>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1.5 text-[9px] font-mono text-slate-400 border-t border-slate-850">
+                        <span>AUDITED RESOLUTION SCORE</span>
+                        <span className="text-emerald-400 font-bold">97% SYSTEM EFFECTIVENESS</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
 
             </div>
