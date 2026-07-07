@@ -27,7 +27,7 @@ export const ConsoleTerminal: React.FC<ConsoleTerminalProps> = React.memo(({
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (terminalEndRef.current) {
+    if (terminalEndRef.current && typeof terminalEndRef.current.scrollIntoView === "function") {
       terminalEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [activeStepIndex, steps]);

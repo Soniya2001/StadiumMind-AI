@@ -20,6 +20,7 @@ export default defineConfig(() => {
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
     test: {
+      globals: true,
       environment: 'jsdom',
       setupFiles: ['./src/vitest.setup.ts'],
       coverage: {
